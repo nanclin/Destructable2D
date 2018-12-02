@@ -88,6 +88,7 @@ public class GridController : MonoBehaviour {
                     box.transform.localPosition = pos;
                     box.transform.localScale = Vector3.one * tileSize;
                     box.Coord = new Vector2(columns - c - 1, rows - r - 1);
+                    box.Map = Map;
                     box.MyOnCollision = OnTileCollision;
                     BoxColliders[columns - c - 1, rows - r - 1] = box;
                 }
