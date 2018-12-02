@@ -12,10 +12,9 @@ public class MeshGenerator : MonoBehaviour {
 
     private BoxColliderController[,] BoxColliders;
 
-    public void GenerateGridMesh(float[,] map, float treshold = 0) {
+    public void GenerateGridMesh(float[,] map, float tileSize, float treshold = 0) {
         int rows = map.GetLength(0);
         int columns = map.GetLength(1);
-        float tileSize = 1.0f / rows;
 
         int vertexCount = columns * rows * 4;
         int trianglesCount = columns * rows * 2 * 3;
@@ -28,7 +27,7 @@ public class MeshGenerator : MonoBehaviour {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
                 Vector3 pos = new Vector3(c, r) * tileSize;
-                float value = map[columns - c - 1, rows - r - 1];
+                float value = map[rows - r - 1, columns - c - 1];
                 if (value > treshold) {
                     AddTile(pos, tileSize, new Vector2(1, 1), ref vertexIndex, ref triangleIndex);
                 }

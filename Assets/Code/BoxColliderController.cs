@@ -17,9 +17,9 @@ public class BoxColliderController : MonoBehaviour {
     }
 
     void OnDrawGizmos() {
-        float tileSize = 1.0f / Map.GetLength(0);
+        float tileSize = 1.0f / Mathf.Min(Map.GetLength(1), Map.GetLength(0));
         Vector3 pos = transform.position + (Vector3) Vector2.one * 0.5f * tileSize;
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(pos, Vector3.one * Map[(int) Coord.x, (int) Coord.y] * tileSize);
+        Gizmos.DrawWireCube(pos, Vector3.one * Map[(int) Coord.y, (int) Coord.x] * tileSize);
     }
 }

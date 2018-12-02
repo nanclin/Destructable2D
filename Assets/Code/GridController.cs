@@ -24,11 +24,13 @@ public class GridController : MonoBehaviour {
 
     private BoxColliderController[,] BoxColliders;
     private float[,] Map;
+    private float TileSize;
 
     void Start() {
+        TileSize = 1.0f / Mathf.Min(MapWidth, MapHeight);
         InitializeMap(MapWidth, MapHeight);
-        ProceduralMesh.GenerateGridMesh(Map, Treshold1);
-        ProceduralMesh2.GenerateGridMesh(Map, Treshold2);
+        ProceduralMesh.GenerateGridMesh(Map, TileSize, Treshold1);
+        ProceduralMesh2.GenerateGridMesh(Map, TileSize, Treshold2);
         GenerateGridColliders(Map);
     }
 
@@ -36,8 +38,8 @@ public class GridController : MonoBehaviour {
 
         if (Input.GetKeyDown(KeyCode.Return)) {
             InitializeMap(MapWidth, MapHeight);
-            ProceduralMesh.GenerateGridMesh(Map, Treshold1);
-            ProceduralMesh2.GenerateGridMesh(Map, Treshold2);
+            ProceduralMesh.GenerateGridMesh(Map, TileSize, Treshold1);
+            ProceduralMesh2.GenerateGridMesh(Map, TileSize, Treshold2);
             GenerateGridColliders(Map);
         }
 
@@ -53,8 +55,8 @@ public class GridController : MonoBehaviour {
     private void InitializeMap(int width, int height) {
         // generate from 2Dmap
         Map = new float[height, width];
-        for (int r = 0; r < Map.GetLength(0); r++) {
-            for (int c = 0; c < Map.GetLength(1); c++) {
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
                 Map[r, c] = 1;//Random.value;
             }
         }
@@ -63,13 +65,12 @@ public class GridController : MonoBehaviour {
     public void GenerateGridColliders(float[,] map) {
         int rows = map.GetLength(0);
         int columns = map.GetLength(1);
-        float tileSize = 1.0f / rows;
 
         // remove old colliders
         for (int r = 0; r < rows; r++) {
             if (BoxColliders == null) break;
             for (int c = 0; c < columns; c++) {
-                BoxColliderController box = BoxColliders[c, r];
+                BoxColliderController box = BoxColliders[r, c];
                 if (box != null)
                     Destroy(box.gameObject);
             }
@@ -79,18 +80,18 @@ public class GridController : MonoBehaviour {
         BoxColliders = new BoxColliderController[rows, columns];
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
-                Vector3 pos = new Vector3(c, r) * tileSize;
+                Vector3 pos = new Vector3(c, r) * TileSize;
 
-                float value = map[columns - c - 1, rows - r - 1];
+                float value = map[rows - r - 1, columns - c - 1];
                 if (value > 0.5f) {
                     BoxColliderController box = Instantiate(BoxColliderPrefab).GetComponent<BoxColliderController>();
                     box.transform.parent = transform;
                     box.transform.localPosition = pos;
-                    box.transform.localScale = Vector3.one * tileSize;
+                    box.transform.localScale = Vector3.one * TileSize;
                     box.Coord = new Vector2(columns - c - 1, rows - r - 1);
                     box.Map = Map;
                     box.MyOnCollision = OnTileCollision;
-                    BoxColliders[columns - c - 1, rows - r - 1] = box;
+                    BoxColliders[rows - r - 1, columns - c - 1] = box;
                 }
             }
         }
@@ -99,30 +100,29 @@ public class GridController : MonoBehaviour {
     private void OnTileCollision(Vector2 coord, Vector2 blastDirection) {
         int rows = Map.GetLength(0);
         int columns = Map.GetLength(1);
-        float tileSize = 1.0f / rows;
 
         bool mapChanged = false;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
-                Vector2 diff = (coord - new Vector2(c, r)) * tileSize;
+                Vector2 diff = (coord - new Vector2(c, r)) * TileSize;
                 if (diff.magnitude < Radius) {
 
                     // empty cell
-                    if (Map[c, r] <= 0)
+                    if (Map[r, c] <= 0)
                         continue;
 
                     // damage
                     float falloff = 1 - diff.magnitude / Radius;
                     falloff = AnimationCurve.Evaluate(falloff);
-                    Map[c, r] -= falloff * BlastPower;
+                    Map[r, c] -= falloff * BlastPower;
                     mapChanged = true;
 
                     // not yet dead
-                    if (Map[c, r] > 0)
+                    if (Map[r, c] > 0)
                         continue;
 
                     // kill cell
-                    BoxColliderController box = BoxColliders[c, r];
+                    BoxColliderController box = BoxColliders[r, c];
                     if (box == null)
                         continue;
 
@@ -132,14 +132,14 @@ public class GridController : MonoBehaviour {
 
                     // destroy
                     Destroy(box.gameObject);
-                    BoxColliders[c, r] = null;
+                    BoxColliders[r, c] = null;
                 }
             }
         }
 
         if (mapChanged) {
-            ProceduralMesh.GenerateGridMesh(Map, Treshold1);
-            ProceduralMesh2.GenerateGridMesh(Map, Treshold2);
+            ProceduralMesh.GenerateGridMesh(Map, TileSize, Treshold1);
+            ProceduralMesh2.GenerateGridMesh(Map, TileSize, Treshold2);
         }
     }
 }
