@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class MeshGenerator : MonoBehaviour {
 
+    [SerializeField] [Range(1, 50)] int MapWidth = 30;
+    [SerializeField] [Range(1, 50)] int MapHeight = 30;
+
     [SerializeField] [Range(0, 7)] private int TreeHeight = 3;
     [SerializeField] bool ShowGrid = true;
     [SerializeField] float Radius = 1;
@@ -19,37 +22,65 @@ public class MeshGenerator : MonoBehaviour {
 
     private QuadTree Tree;
 
-    //    private float[,] Map = new float[,] {
-    //        { 0, 0, 0, 0, },
-    //        { 0, 1, 1, 0, },
-    //        { 0, 0, 1, 0, },
-    //        { 0, 0, 0, 0, },
-    //    };
+    private float[,] Map = new float[,] {
+        { 0, 0, 0, 0, },
+        { 0, 1, 1, 0, },
+        { 0, 0, 1, 0, },
+        { 0, 0, 0, 0, },
+    };
 
     void Start() {
-        // generate from 2Dmap
-//        GenerateGrid(Map);
+        InitializeMap(MapWidth, MapHeight);
 
-        // generate from quadtree
-        Tree = new QuadTree(Vector2.zero, 1, 1, TreeHeight);
-//        Tree.SetValueCircle(0, new Vector2(1, 0.5f), 0.3f, Tree);
-        GenerateGrid(Tree);
+//        // generate from quadtree
+//        Tree = new QuadTree(Vector2.zero, 1, 1, TreeHeight);
+////        Tree.SetValueCircle(0, new Vector2(1, 0.5f), 0.3f, Tree);
+//        GenerateGrid(Tree);
     }
 
     void Update() {
 
         if (Input.GetKeyDown(KeyCode.Return)) {
-            Tree = new QuadTree(Vector2.zero, 1, 1, TreeHeight);
+//            Tree = new QuadTree(Vector2.zero, 1, 1, TreeHeight);
+
+            InitializeMap(MapWidth, MapHeight);
         }
 
         if (Input.GetMouseButtonDown(0)) {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Tree.SetValueCircle(0, mousePos, Radius, Tree);
-            GenerateGrid(Tree);
+//            Tree.SetValueCircle(0, mousePos, Radius, Tree);
+//            GenerateGrid(Tree);
+
+            // blast hole through map
+            int rows = Map.GetLength(0);
+            int columns = Map.GetLength(1);
+            float tileSize = 1.0f / rows;
+
+            for (int r = 0; r < Map.GetLength(0); r++) {
+                for (int c = 0; c < Map.GetLength(1); c++) {
+                    Vector2 diff = mousePos - new Vector2(columns - c - 1, rows - r - 1) * tileSize;
+                    if (diff.magnitude < Radius)
+                        Map[c, r] = 0;
+                }
+            }
+
+            // regenerate mesh from map
+            GenerateGridMesh(Map);
         }
     }
 
-    public void GenerateGrid(QuadTree tree) {
+    private void InitializeMap(int width, int height) {
+        // generate from 2Dmap
+        Map = new float[height, width];
+        for (int r = 0; r < Map.GetLength(0); r++) {
+            for (int c = 0; c < Map.GetLength(1); c++) {
+                Map[r, c] = 1;//Random.value;
+            }
+        }
+        GenerateGridMesh(Map);
+    }
+
+    public void GenerateGridMesh(QuadTree tree) {
         int rows = (int) Mathf.Pow(2, tree.TreeHeight);
         int columns = rows;
 
@@ -83,9 +114,10 @@ public class MeshGenerator : MonoBehaviour {
         AddQTTile(tree.SubTrees[3]);
     }
 
-    public void GenerateGrid(float[,] map) {
+    public void GenerateGridMesh(float[,] map) {
         int rows = map.GetLength(0);
         int columns = map.GetLength(1);
+        float tileSize = 1.0f / rows;
 
         int vertexCount = columns * rows * 4;
         int trianglesCount = columns * rows * 2 * 3;
@@ -97,8 +129,7 @@ public class MeshGenerator : MonoBehaviour {
         int triangleIndex = 0;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
-                float tileSize = 1;
-                Vector3 pos = new Vector3(c, r);// + (Vector3) Vector2.one * tileSize * 0.5f;
+                Vector3 pos = new Vector3(c, r) * tileSize;// + (Vector3) Vector2.one * tileSize * 0.5f;
 
 //                // calculate id from neighbours
 //                int c0 = (map[r + 0, c + 0] >= treshold) ? 1 : 0;
@@ -108,7 +139,9 @@ public class MeshGenerator : MonoBehaviour {
 //                int id = c0 + c1 + c2 + c3;
 
 //                AddMSTile(pos, tileSize, id, ref vertexIndex, ref triangleIndex);
-                AddTile(pos, tileSize, new Vector2(columns, rows), ref vertexIndex, ref triangleIndex);
+
+                if (map[columns - c - 1, rows - r - 1] > 0.5f)
+                    AddTile(pos, tileSize, new Vector2(1, 1), ref vertexIndex, ref triangleIndex);
             }
         }
 
