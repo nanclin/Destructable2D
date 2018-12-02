@@ -1,0 +1,16 @@
+﻿<Properties StartupConfiguration="{2F1387C8-A013-9DDC-F2A2-FC4D1CD45B14}|">
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="Unity.Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Code/QuadTreeController.cs">
+    <Files>
+      <File FileName="Assets/Code/QuadTree.cs" Line="39" Column="38" />
+      <File FileName="Assets/Code/TextureMask.cs" Line="13" Column="5" />
+      <File FileName="Assets/Code/QuadTreeController.cs" Line="46" Column="33" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>
