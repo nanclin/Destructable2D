@@ -261,11 +261,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c8a8da062da44923a3df9ce1a0e2096, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MapWidth: 10
+  MapHeight: 10
   TreeHeight: 4
   ShowGrid: 0
-  Radius: 0.2
+  Radius: 0.4
+  BoxColliderPrefab: {fileID: 1775482533949682, guid: 9c7db6a33e5134fbfb4d47193372c67b,
+    type: 2}
+  BombPrefab: {fileID: 1394854624247640, guid: f3bf00ca9d1ac440986b06ebb6719826, type: 2}
   MeshFilter: {fileID: 1742805952}
-  MeshCollider: {fileID: 0}
 --- !u!4 &1742805954
 Transform:
   m_ObjectHideFlags: 0

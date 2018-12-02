@@ -11,6 +11,9 @@ public class MeshGenerator : MonoBehaviour {
     [SerializeField] bool ShowGrid = true;
     [SerializeField] float Radius = 1;
 
+    [SerializeField] GameObject BoxColliderPrefab;
+    [SerializeField] GameObject BombPrefab;
+
     public MeshFilter MeshFilter;
     //    public Texture2D TileAtlas;
 
@@ -29,8 +32,11 @@ public class MeshGenerator : MonoBehaviour {
         { 0, 0, 0, 0, },
     };
 
+    private BoxColliderController[,] BoxColliders;
+
     void Start() {
         InitializeMap(MapWidth, MapHeight);
+        GenerateGridColliders(Map);
 
 //        // generate from quadtree
 //        Tree = new QuadTree(Vector2.zero, 1, 1, TreeHeight);
@@ -48,24 +54,26 @@ public class MeshGenerator : MonoBehaviour {
 
         if (Input.GetMouseButtonDown(0)) {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-//            Tree.SetValueCircle(0, mousePos, Radius, Tree);
-//            GenerateGrid(Tree);
+////            Tree.SetValueCircle(0, mousePos, Radius, Tree);
+////            GenerateGrid(Tree);
+//
+//            // blast hole through map
+//            int rows = Map.GetLength(0);
+//            int columns = Map.GetLength(1);
+//            float tileSize = 1.0f / rows;
+//
+//            for (int r = 0; r < Map.GetLength(0); r++) {
+//                for (int c = 0; c < Map.GetLength(1); c++) {
+//                    Vector2 diff = mousePos - new Vector2(columns - c - 1, rows - r - 1) * tileSize;
+//                    if (diff.magnitude < Radius)
+//                        Map[c, r] = 0;
+//                }
+//            }
+//
+//            // regenerate mesh from map
+//            GenerateGridMesh(Map);
 
-            // blast hole through map
-            int rows = Map.GetLength(0);
-            int columns = Map.GetLength(1);
-            float tileSize = 1.0f / rows;
-
-            for (int r = 0; r < Map.GetLength(0); r++) {
-                for (int c = 0; c < Map.GetLength(1); c++) {
-                    Vector2 diff = mousePos - new Vector2(columns - c - 1, rows - r - 1) * tileSize;
-                    if (diff.magnitude < Radius)
-                        Map[c, r] = 0;
-                }
-            }
-
-            // regenerate mesh from map
-            GenerateGridMesh(Map);
+            Instantiate(BombPrefab, mousePos, Quaternion.identity);
         }
     }
 
@@ -140,14 +148,80 @@ public class MeshGenerator : MonoBehaviour {
 
 //                AddMSTile(pos, tileSize, id, ref vertexIndex, ref triangleIndex);
 
-                if (map[columns - c - 1, rows - r - 1] > 0.5f)
+                float value = map[columns - c - 1, rows - r - 1];
+                if (value > 0) {
                     AddTile(pos, tileSize, new Vector2(1, 1), ref vertexIndex, ref triangleIndex);
+                }
             }
         }
 
         MeshFilter.mesh.vertices = Vertices;
         MeshFilter.mesh.triangles = Triangles;
         MeshFilter.mesh.uv = UVs;
+    }
+
+    public void GenerateGridColliders(float[,] map) {
+        int rows = map.GetLength(0);
+        int columns = map.GetLength(1);
+        float tileSize = 1.0f / rows;
+        BoxColliders = new BoxColliderController[rows, columns];
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
+                Vector3 pos = new Vector3(c, r) * tileSize;// + (Vector3) Vector2.one * tileSize * 0.5f;
+
+                float value = map[columns - c - 1, rows - r - 1];
+                if (value > 0.5f) {
+                    BoxColliderController box = Instantiate(BoxColliderPrefab, pos, Quaternion.identity).GetComponent<BoxColliderController>();
+                    box.Coord = new Vector2(columns - c - 1, rows - r - 1);
+                    box.transform.localScale = Vector3.one * tileSize;
+                    box.MyOnCollision = OnTileCollision;
+                    box.transform.parent = transform;
+                    BoxColliders[columns - c - 1, rows - r - 1] = box;
+                }
+            }
+        }
+
+    }
+
+    private void OnTileCollision(Vector2 coord) {
+//        int cr = (int) coord.y;
+//        int cc = (int) coord.x;
+        int rows = Map.GetLength(0);
+        int columns = Map.GetLength(1);
+        float tileSize = 1.0f / rows;
+
+        bool mapChanged = false;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
+                Vector2 diff = (new Vector2(c, r) - coord) * tileSize;
+                if (diff.magnitude < Radius) {
+
+                    // empty cell
+                    if (Map[c, r] <= 0)
+                        continue;
+
+                    // damage
+                    Map[c, r] -= 0.1f;
+
+                    // not yet dead
+                    if (Map[c, r] > 0)
+                        continue;
+
+                    // kill cell
+                    mapChanged = true;
+                    BoxColliderController box = BoxColliders[c, r];
+                    if (box == null)
+                        continue;
+                    Destroy(box.gameObject);
+                    BoxColliders[c, r] = null;
+                }
+            }
+        }
+//        Instantiate(BombPrefab, new Vector3(Random.value, 2, 0), Quaternion.identity);
+
+        if (mapChanged)
+            GenerateGridMesh(Map);
     }
 
     private void AddTile(Vector3 pos, float tileSize, Vector2 gridSize, ref int vertexIndex, ref int triangleIndex) {
