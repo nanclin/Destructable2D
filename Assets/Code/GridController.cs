@@ -18,6 +18,7 @@ public class GridController : MonoBehaviour {
     [SerializeField] GameObject BoxColliderPrefab;
     [SerializeField] GameObject BombPrefab;
     [SerializeField] GameObject TileBreakParticles;
+    [SerializeField] GameObject Target;
 
     [SerializeField] MeshGenerator ProceduralMesh;
     [SerializeField] MeshGenerator ProceduralMesh2;
@@ -25,6 +26,7 @@ public class GridController : MonoBehaviour {
     private BoxColliderController[,] BoxColliders;
     private float[,] Map;
     private float TileSize;
+    private int TargetFloor = 0;
 
     void Start() {
         TileSize = 1.0f / Mathf.Min(MapWidth, MapHeight);
@@ -47,8 +49,18 @@ public class GridController : MonoBehaviour {
         if (Input.GetMouseButtonDown(0)) {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             GameObject bomb = Instantiate(BombPrefab, mousePos, Quaternion.identity);
-            Vector2 dir = (Vector2.one * 0.5f - (Vector2) bomb.transform.position).normalized;
+            Vector2 dir = ((Vector2) Target.transform.position - (Vector2) bomb.transform.position).normalized;
             bomb.GetComponent<Rigidbody2D>().AddForce(dir * ShootForce);
+        }
+
+        // move target up/down
+        if (Input.GetKeyDown(KeyCode.UpArrow)) {
+            TargetFloor++;
+            Target.transform.position = Vector2.up * TargetFloor + Vector2.one * 0.5f;
+        }
+        if (Input.GetKeyDown(KeyCode.DownArrow)) {
+            TargetFloor--;
+            Target.transform.position = Vector2.up * TargetFloor + Vector2.one * 0.5f;
         }
     }
 
