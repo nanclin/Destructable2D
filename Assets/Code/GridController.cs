@@ -17,6 +17,7 @@ public class GridController : MonoBehaviour {
 
     [SerializeField] GameObject BoxColliderPrefab;
     [SerializeField] GameObject BombPrefab;
+    [SerializeField] GameObject TileBreakParticles;
 
     [SerializeField] MeshGenerator ProceduralMesh;
     [SerializeField] MeshGenerator ProceduralMesh2;
@@ -94,7 +95,7 @@ public class GridController : MonoBehaviour {
         }
     }
 
-    private void OnTileCollision(Vector2 coord) {
+    private void OnTileCollision(Vector2 coord, Vector2 blastDirection) {
         int rows = Map.GetLength(0);
         int columns = Map.GetLength(1);
         float tileSize = 1.0f / rows;
@@ -123,6 +124,12 @@ public class GridController : MonoBehaviour {
                     BoxColliderController box = BoxColliders[c, r];
                     if (box == null)
                         continue;
+
+                    // explosion
+                    Quaternion rot = Quaternion.LookRotation(-blastDirection);
+                    Instantiate(TileBreakParticles, box.transform.position - Vector3.forward, rot);
+
+                    // destroy
                     Destroy(box.gameObject);
                     BoxColliders[c, r] = null;
                 }
