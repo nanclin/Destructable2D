@@ -14,6 +14,7 @@ public class GridController : MonoBehaviour {
     [SerializeField] float Radius = 1;
     [SerializeField] float ShootForce = 1000;
     [SerializeField] float BlastPower = 0.5f;
+    [SerializeField] float FramePowerModifier = 0.5f;
 
     [SerializeField] GameObject BoxColliderPrefab;
     [SerializeField] GameObject BombPrefab;
@@ -126,7 +127,13 @@ public class GridController : MonoBehaviour {
                     // damage
                     float falloff = 1 - diff.magnitude / Radius;
                     falloff = AnimationCurve.Evaluate(falloff);
-                    Map[r, c] -= falloff * BlastPower;
+
+                    // frame strength
+                    float powerModifier = 1;
+                    if ((rows - r - 1) % 10 == 0 || c == 0 || c == columns - 1)
+                        powerModifier = FramePowerModifier;
+
+                    Map[r, c] -= falloff * BlastPower * powerModifier;
                     mapChanged = true;
 
                     // not yet dead
