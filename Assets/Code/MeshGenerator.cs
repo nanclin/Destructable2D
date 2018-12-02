@@ -10,6 +10,8 @@ public class MeshGenerator : MonoBehaviour {
     [SerializeField] [Range(0, 7)] private int TreeHeight = 3;
     [SerializeField] bool ShowGrid = true;
     [SerializeField] float Radius = 1;
+    [SerializeField] float ShootForce = 1000;
+    [SerializeField] float BlastPower = 0.5f;
 
     [SerializeField] GameObject BoxColliderPrefab;
     [SerializeField] GameObject BombPrefab;
@@ -73,7 +75,9 @@ public class MeshGenerator : MonoBehaviour {
 //            // regenerate mesh from map
 //            GenerateGridMesh(Map);
 
-            Instantiate(BombPrefab, mousePos, Quaternion.identity);
+            GameObject bomb = Instantiate(BombPrefab, mousePos, Quaternion.identity);
+            Vector2 dir = (Vector2.one * 0.5f - (Vector2) bomb.transform.position).normalized;
+            bomb.GetComponent<Rigidbody2D>().AddForce(dir * ShootForce);
         }
     }
 
@@ -172,11 +176,12 @@ public class MeshGenerator : MonoBehaviour {
 
                 float value = map[columns - c - 1, rows - r - 1];
                 if (value > 0.5f) {
-                    BoxColliderController box = Instantiate(BoxColliderPrefab, pos, Quaternion.identity).GetComponent<BoxColliderController>();
-                    box.Coord = new Vector2(columns - c - 1, rows - r - 1);
-                    box.transform.localScale = Vector3.one * tileSize;
-                    box.MyOnCollision = OnTileCollision;
+                    BoxColliderController box = Instantiate(BoxColliderPrefab).GetComponent<BoxColliderController>();
                     box.transform.parent = transform;
+                    box.transform.localPosition = pos;
+                    box.transform.localScale = Vector3.one * tileSize;
+                    box.Coord = new Vector2(columns - c - 1, rows - r - 1);
+                    box.MyOnCollision = OnTileCollision;
                     BoxColliders[columns - c - 1, rows - r - 1] = box;
                 }
             }
@@ -185,8 +190,6 @@ public class MeshGenerator : MonoBehaviour {
     }
 
     private void OnTileCollision(Vector2 coord) {
-//        int cr = (int) coord.y;
-//        int cc = (int) coord.x;
         int rows = Map.GetLength(0);
         int columns = Map.GetLength(1);
         float tileSize = 1.0f / rows;
@@ -194,7 +197,7 @@ public class MeshGenerator : MonoBehaviour {
         bool mapChanged = false;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < columns; c++) {
-                Vector2 diff = (new Vector2(c, r) - coord) * tileSize;
+                Vector2 diff = (coord - new Vector2(c, r)) * tileSize;
                 if (diff.magnitude < Radius) {
 
                     // empty cell
@@ -202,7 +205,9 @@ public class MeshGenerator : MonoBehaviour {
                         continue;
 
                     // damage
-                    Map[c, r] -= 0.1f;
+                    float falloff = 1 - diff.magnitude / Radius;
+                    falloff *= falloff;
+                    Map[c, r] -= falloff * BlastPower;
 
                     // not yet dead
                     if (Map[c, r] > 0)

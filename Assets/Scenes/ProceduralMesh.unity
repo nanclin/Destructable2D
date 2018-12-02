@@ -266,6 +266,8 @@ MonoBehaviour:
   TreeHeight: 4
   ShowGrid: 0
   Radius: 0.4
+  ShootForce: 300
+  BlastPower: 0.3
   BoxColliderPrefab: {fileID: 1775482533949682, guid: 9c7db6a33e5134fbfb4d47193372c67b,
     type: 2}
   BombPrefab: {fileID: 1394854624247640, guid: f3bf00ca9d1ac440986b06ebb6719826, type: 2}
