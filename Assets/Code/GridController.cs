@@ -115,13 +115,13 @@ public class GridController : MonoBehaviour {
                     float falloff = 1 - diff.magnitude / Radius;
                     falloff = AnimationCurve.Evaluate(falloff);
                     Map[c, r] -= falloff * BlastPower;
+                    mapChanged = true;
 
                     // not yet dead
                     if (Map[c, r] > 0)
                         continue;
 
                     // kill cell
-                    mapChanged = true;
                     BoxColliderController box = BoxColliders[c, r];
                     if (box == null)
                         continue;
