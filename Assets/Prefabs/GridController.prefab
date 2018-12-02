@@ -287,10 +287,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e375c3f8865446c0a8dad284a2748f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MapWidth: 10
-  MapHeight: 10
-  Treshold1: 0.8
-  Treshold2: 1
+  MapWidth: 5
+  MapHeight: 5
+  Treshold1: 0.25
+  Treshold2: 0
   AnimationCurve:
     serializedVersion: 2
     m_Curve:
@@ -317,7 +317,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   Radius: 0.5
   ShootForce: 300
-  BlastPower: 0.1
+  BlastPower: 0.05
   BoxColliderPrefab: {fileID: 1775482533949682, guid: 9c7db6a33e5134fbfb4d47193372c67b,
     type: 2}
   BombPrefab: {fileID: 1394854624247640, guid: f3bf00ca9d1ac440986b06ebb6719826, type: 2}
